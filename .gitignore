@@ -1,0 +1,38 @@
+# Secrets
+.env
+config/secrets.py
+
+# Python (auto-generated so useless to git)
+__pycache__/
+*.pyc
+
+# Virtual Environments (conda) (huge folder not portable)
+#.env
+env/
+venv/
+.venv/
+geoai/
+
+# ML Artifacts (Git ignore the top-level data folder, but you can add specific subfolders if needed)
+/data/
+
+# Model
+/models/
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# Jupyter
+notebooks/
+.ipynb_checkpoints/
+
+# Streamlit cache
+.streamlit/
+
+# OS files
+.DS_Store
+Thumbs.db
