@@ -1,6 +1,5 @@
 import joblib
 import xgboost as xgb
-import numpy as np
 
 from config import settings
 from config.database import get_engine
@@ -18,9 +17,6 @@ def train_stress_model(df):
 
     if settings.STRESS_TARGET not in df.columns:
         raise ValueError(f"❌ Missing target column: {settings.STRESS_TARGET}")
-    
-    # Ensure model directory exists
-    settings.MODELS_DIR.mkdir(parents=True, exist_ok=True)
 
     # Define Features for Stress Prediction
     stress_features = get_stress_features(df.columns)

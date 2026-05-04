@@ -8,7 +8,6 @@ from src.db.queries import get_processed_features
 from src.models.features import (
     get_stress_features,
     get_price_features,
-    get_season_cols
 )
 
 

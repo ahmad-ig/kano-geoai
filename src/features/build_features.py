@@ -7,7 +7,7 @@ from config import settings
 from config.database import get_engine
 from src.db.queries import get_processed_features
 
-def load_and_prep_data(engine, filepath=None):
+def load_and_prep_data(engine):
     """
     Loads processed data from PostgreSQL, sets index, and creates necessary
     Diff/Seasonality features for model training.

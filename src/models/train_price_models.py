@@ -13,8 +13,6 @@ def train_price_models(df):
     Trains Price Models for all crops defined in settings.CROPS.
     Uses 'Difference' strategy: Target = Current_Price - Prev_Price
     """
-    # Ensure model directory exists
-    settings.MODELS_DIR.mkdir(parents=True, exist_ok=True)
     
     season_cols = get_season_cols(df.columns)
 

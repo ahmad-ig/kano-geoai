@@ -13,9 +13,11 @@ def get_stress_features(columns):
     
     return stress_features
 
+
 def get_season_cols(columns):
     """Dynamically get seasonality columns (Seas_2, Seas_3, etc.)"""
     return [c for c in columns if c.startswith('Seas_')]
+
 
 def get_price_features(crop, season_cols, columns):
     """Returns the list of features needed for a specific crop."""

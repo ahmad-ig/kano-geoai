@@ -15,8 +15,6 @@ def process_environmental_data(engine):
     # 1. Load Data from PostgreSQL
     env_df = get_env_data(engine)
 
-    #env_df = pd.read_csv(filepath) # Load from backup CSV.
-
     env_df['period_start'] = pd.to_datetime(env_df['period_start'])
     env_df['Month_Year'] = env_df['period_start'].dt.to_period('M')
 
