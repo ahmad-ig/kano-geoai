@@ -60,9 +60,14 @@ def get_predictions(manual_overrides=None):
 
 @st.cache_data(ttl=3600)
 def load_historical_data():
-    df = get_processed_features(engine)
+    #df = get_processed_features(engine)
 
-    return df
+    if settings.DATA_SOURCE == "db":
+        return get_processed_features(engine)
+    else:
+        return pd.read_csv("data/processed_features.csv", parse_dates=['Date'])
+
+    #return df
 
 @st.cache_data(ttl=3600)
 def load_lga_map_data():
@@ -71,18 +76,25 @@ def load_lga_map_data():
     # Load geometry from DB
     gdf = get_lga_map_data(engine)
 
-    # Convert GeoDataFrame to GeoJSON format for Plotly
-    kano_geojson = json.loads(gdf.to_json()) 
-        
-    # Load latest environmental data
-    query = """
-    SELECT "LGA_NAME", "NDVI", "Rainfall"
-    FROM raw_env_data
-    WHERE period_start = (
-        SELECT period_start FROM raw_env_data ORDER BY period_start DESC LIMIT 1
-    )
-    """
-    lga_df = pd.read_sql(query, con=engine)
+    if settings.DATA_SOURCE == "db":
+        # Convert GeoDataFrame to GeoJSON format for Plotly
+        kano_geojson = json.loads(gdf.to_json())
+    else:
+        with open("data/processed/kano_lga_map.geojson") as f:
+            kano_geojson = json.load(f)
+
+    if settings.DATA_SOURCE == "db":
+        # Load latest environmental data
+        query = """
+        SELECT "LGA_NAME", "NDVI", "Rainfall"
+        FROM raw_env_data
+        WHERE period_start = (
+            SELECT period_start FROM raw_env_data ORDER BY period_start DESC LIMIT 1
+        )
+        """
+        lga_df = pd.read_sql(query, con=engine)
+    else:
+        lga_df = pd.read_csv("data/processed/lga_env.csv")
 
     # Clean the names to ensure perfect matching with the Shapefile
     if not lga_df.empty:
