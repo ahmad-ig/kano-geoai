@@ -11,11 +11,14 @@ RAW_DIR = DATA_DIR / "raw"
 PROCESSED_DIR = DATA_DIR / "processed"
 
 # Input Files
-RAW_ENV_PATH = RAW_DIR / "Kano_StateWide_Vegetation_Data.csv"
-RAW_PRICE_PATH = RAW_DIR / "FEWS_NET_Staple_Food_Price_Data.csv"
+RAW_ENV_DATA_PATH = RAW_DIR / "Kano_StateWide_Vegetation_Data.csv"
+RAW_PRICE_DATA_PATH = RAW_DIR / "FEWS_NET_Staple_Food_Price_Data.csv"
 
 # Processed Output
 PROCESSED_DATA_PATH = PROCESSED_DIR / "kano_food_security_data.csv"
+
+# Shapefile for Kano LGAs (for mapping)
+LGA_SHP_FILE_PATH = PROCESSED_DIR / "kano_shp" / "kano_lga.shp"
 
 # Ensure folders exist
 DATA_DIR.mkdir(parents=True, exist_ok=True)
