@@ -1,5 +1,5 @@
 from config.paths import *
-from config.secrets import *
+#from config.secrets import *
 
 # BUSINESS LOGIC
 TARGET_MARKET = 'Kano, Dawanau'
