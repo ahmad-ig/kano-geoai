@@ -7,7 +7,6 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'
 import json
 import streamlit as st
 import pandas as pd
-import geopandas as gpd  # <-- NEW: Added GeoPandas
 import plotly.graph_objects as go
 import plotly.express as px
 
