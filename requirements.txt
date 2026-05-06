@@ -1,9 +1,6 @@
-streamlit==1.51.0
+streamlit
 pandas
 numpy
 plotly
 scikit-learn
 joblib
-geopandas
-shapely
-pyproj
