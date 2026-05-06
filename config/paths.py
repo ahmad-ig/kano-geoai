@@ -15,7 +15,9 @@ RAW_ENV_DATA_PATH = RAW_DIR / "Kano_StateWide_Vegetation_Data.csv"
 RAW_PRICE_DATA_PATH = RAW_DIR / "FEWS_NET_Staple_Food_Price_Data.csv"
 
 # Processed Output
-PROCESSED_DATA_PATH = PROCESSED_DIR / "kano_food_security_data.csv"
+PROCESSED_DATA_PATH = PROCESSED_DIR / "processed_kano_food_security_data.csv"
+PROCESSED_ENV_DATA_PATH = PROCESSED_DIR / "latest_lga_env_data.csv"
+PROCESSED_LGA_MAP_PATH = PROCESSED_DIR / "kano_lga_map.geojson"
 
 # Shapefile for Kano LGAs (for mapping)
 LGA_SHP_FILE_PATH = PROCESSED_DIR / "kano_shp" / "kano_lga.shp"
