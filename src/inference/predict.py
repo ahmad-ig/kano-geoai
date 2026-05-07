@@ -3,7 +3,7 @@ import joblib
 
 
 from config import settings
-from config.database import get_engine
+#from config.database import get_engine
 from src.db.queries import get_processed_features
 from src.models.features import (
     get_stress_features,
@@ -11,15 +11,13 @@ from src.models.features import (
 )
 
 
-def load_latest_context(engine):
+def load_latest_context():
     """Loads the full dataset from PostgreSQL and applies the global cutoff."""
     print("🔄 Loading latest data context from Database...")
 
-    if settings.DATA_SOURCE == "csv":
-        print("📂 Loading processed features from CSV (for Streamlit deployment)...")
-        df = pd.read_csv(settings.PROCESSED_DATA_PATH, parse_dates=['Date'])
-    else:
-        df = get_processed_features(engine)
+    #df = get_processed_features()
+
+    df = pd.read_csv(settings.PROCESSED_DATA_PATH)  # Load from CSV for Streamlit deployment
 
     df['Date'] = pd.to_datetime(df['Date'])
     df = df.sort_values('Date').set_index('Date')
@@ -147,8 +145,8 @@ def predict_prices(input_df, last_row, season_cols):
     return predictions
 
 
-def run_forecast(engine):
-    last_row, last_date, all_cols = load_latest_context(engine)
+def run_forecast():
+    last_row, last_date, all_cols = load_latest_context()
     input_df, season_cols = prepare_next_month_features(last_row, last_date, all_cols)
 
     stress_val = predict_stress(input_df)
@@ -163,14 +161,14 @@ def run_forecast(engine):
 
 if __name__ == "__main__":
 
-    engine = get_engine()
+    #engine = get_engine()
 
     print("\n🚀 KANO GEO-AI SYSTEM: FORECAST ENGINE")
     print("=" * 45)
     
     try:
         # 1. Load Context (Automatically respects settings.TEST_MONTHS_CUTOFF)
-        last_row, last_date, all_cols = load_latest_context(engine)
+        last_row, last_date, all_cols = load_latest_context()
         
         # 2. Build Future Features
         input_df, season_cols = prepare_next_month_features(last_row, last_date, all_cols)

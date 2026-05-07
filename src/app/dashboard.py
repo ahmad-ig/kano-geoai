@@ -32,17 +32,20 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-@st.cache_resource
-def get_db():
-    return get_engine()
+engine = None
 
-engine = get_db()  # Initialize the database engine at the start of the app
+if settings.DATA_SOURCE == "db":
+    @st.cache_resource
+    def get_db():
+        return get_engine()
+
+    engine = get_db()
 
 # --- 1. LOAD DATA ---
 @st.cache_data(ttl=3600)
 def get_predictions(manual_overrides=None):
     try:
-        last_row, last_date, all_cols = load_latest_context(engine)
+        last_row, last_date, all_cols = load_latest_context()
         if manual_overrides:
             last_row = last_row.copy()  # Avoid modifying the original cached data
             for col, val in manual_overrides.items():
@@ -72,18 +75,13 @@ def load_historical_data():
 def load_lga_map_data():
     """Load LGA map + latest NDVI data from DB."""
 
-    # Load geometry from DB
-    gdf = get_lga_map_data(engine)
-
     if settings.DATA_SOURCE == "db":
+        # Load geometry from DB
+        gdf = get_lga_map_data(engine)
         # Convert GeoDataFrame to GeoJSON format for Plotly
         kano_geojson = json.loads(gdf.to_json())
-    else:
-        with open(paths.PROCESSED_LGA_MAP_PATH) as f:
-            kano_geojson = json.load(f)
+    
 
-    if settings.DATA_SOURCE == "db":
-        # Load latest environmental data
         query = """
         SELECT "LGA_NAME", "NDVI", "Rainfall"
         FROM raw_env_data
@@ -93,6 +91,9 @@ def load_lga_map_data():
         """
         lga_df = pd.read_sql(query, con=engine)
     else:
+        with open(paths.PROCESSED_LGA_MAP_PATH) as f:
+            kano_geojson = json.load(f)
+
         lga_df = pd.read_csv(paths.PROCESSED_ENV_DATA_PATH)
 
     # Clean the names to ensure perfect matching with the Shapefile
