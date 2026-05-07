@@ -15,8 +15,8 @@ from src.inference.predict import predict_stress, predict_prices, prepare_next_m
 
 from config import paths
 from config import settings
-from config.database import get_engine
-from src.db.queries import get_processed_features, get_lga_map_data
+#from config.database import get_engine
+#from src.db.queries import get_processed_features, get_lga_map_data
 
 
 # --- PAGE CONFIGURATION ---
@@ -32,14 +32,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-engine = None
-
-if settings.DATA_SOURCE == "db":
-    @st.cache_resource
-    def get_db():
-        return get_engine()
-
-    engine = get_db()
 
 # --- 1. LOAD DATA ---
 @st.cache_data(ttl=3600)
@@ -63,38 +55,18 @@ def get_predictions(manual_overrides=None):
 
 @st.cache_data(ttl=3600)
 def load_historical_data():
+    """Load historical data for charts."""
+    return pd.read_csv(paths.PROCESSED_DATA_PATH, parse_dates=['Date'])
 
-    if settings.DATA_SOURCE == "db":
-        return get_processed_features(engine)
-    else:
-        return pd.read_csv(paths.PROCESSED_DATA_PATH, parse_dates=['Date'])
-
-    #return df
 
 @st.cache_data(ttl=3600)
 def load_lga_map_data():
     """Load LGA map + latest NDVI data from DB."""
 
-    if settings.DATA_SOURCE == "db":
-        # Load geometry from DB
-        gdf = get_lga_map_data(engine)
-        # Convert GeoDataFrame to GeoJSON format for Plotly
-        kano_geojson = json.loads(gdf.to_json())
-    
+    with open(paths.PROCESSED_LGA_MAP_PATH) as f:
+        kano_geojson = json.load(f)
 
-        query = """
-        SELECT "LGA_NAME", "NDVI", "Rainfall"
-        FROM raw_env_data
-        WHERE period_start = (
-            SELECT period_start FROM raw_env_data ORDER BY period_start DESC LIMIT 1
-        )
-        """
-        lga_df = pd.read_sql(query, con=engine)
-    else:
-        with open(paths.PROCESSED_LGA_MAP_PATH) as f:
-            kano_geojson = json.load(f)
-
-        lga_df = pd.read_csv(paths.PROCESSED_ENV_DATA_PATH)
+    lga_df = pd.read_csv(paths.PROCESSED_ENV_DATA_PATH)
 
     # Clean the names to ensure perfect matching with the Shapefile
     if not lga_df.empty:
