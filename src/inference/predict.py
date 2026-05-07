@@ -15,7 +15,11 @@ def load_latest_context(engine):
     """Loads the full dataset from PostgreSQL and applies the global cutoff."""
     print("🔄 Loading latest data context from Database...")
 
-    df = get_processed_features(engine)
+    if settings.DATA_SOURCE == "csv":
+        print("📂 Loading processed features from CSV (for Streamlit deployment)...")
+        df = pd.read_csv(settings.PROCESSED_DATA_PATH, parse_dates=['Date'])
+    else:
+        df = get_processed_features(engine)
 
     df['Date'] = pd.to_datetime(df['Date'])
     df = df.sort_values('Date').set_index('Date')
