@@ -3,8 +3,7 @@ import joblib
 
 
 from config import settings
-#from config.database import get_engine
-from src.db.queries import get_processed_features
+
 from src.models.features import (
     get_stress_features,
     get_price_features,
