@@ -32,6 +32,53 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# --- USER GUIDE EXPANDER ---
+with st.expander("📖 Dashboard Navigation & Input Guide"):
+    st.markdown("""
+    ### Welcome to the Kano GeoAI Food Security Dashboard
+    This interactive dashboard serves as an early-warning system, combining satellite environmental data with macroeconomic indicators to forecast staple grain prices (Maize, Sorghum, Millet) and crop stress across Kano State.
+
+    ---
+
+    ### 🧭 How to Navigate the System
+
+    **1. The LGA Spatial Heatmap (Environmental Monitoring)**
+    * **What it shows:** A live, color-coded map of Kano State's 44 Local Government Areas (LGAs).
+    * **How to use it:** Hover your mouse over any LGA to view its specific environmental metrics. The colors indicate the current **Vegetation Stress (NDVI Anomaly)**. Darker or warmer colors indicate areas experiencing prolonged dry spells or crop degradation, while greener areas indicate healthy agricultural zones.
+
+    **2. The Scenario Simulator (The Predictive Engine)**
+    * **Where to find it:** Located on the left-hand sidebar.
+    * **What it does:** This is the core machine learning engine. It allows you to bypass data delays and instantly test "What-If" scenarios to see how weather and the economy will affect next month's prices.
+
+    **3. Grain Price Trajectories (Market Output)**
+    * **What it shows:** Interactive time-series charts displaying wholesale prices at the Dawanau International Market.
+    * **How to use it:** The solid lines represent the historical baseline prices. The dashed line at the end of the chart represents the **GeoAI Forecast**, calculated based on the exact inputs you provided in the Scenario Simulator.
+
+    ---
+
+    ### 🎛️ Understanding the Inputs & Valid Ranges
+    To ensure the predictive engine provides accurate forecasts, please keep your simulation inputs within the realistic boundaries of the Kano State market and climate ecosystem.
+
+    **1. Current Crop Price (₦)**
+    * **What it is:** The baseline wholesale price for a 100kg bag of grain at the Dawanau Market.
+    * **Valid Range:** Must be a positive number reflecting current market realities.
+
+    **2. Exchange Rate (NGN/USD)**
+    * **What it is:** The macroeconomic indicator representing currency inflation or stabilization.
+    * **Valid Range:** **800 to 2,500 NGN/USD**. 
+    * *Note:* Entering an extreme, impossible crash (e.g., 20,000 NGN/USD) will cause the model to cap at its highest known training parameter, as tree-based models cannot extrapolate to infinity.
+
+    **3. Environmental Anomalies (Rainfall, NDVI, NDMI)**
+    * **What they are:** These inputs use **Z-scores**. They do not represent raw values (like millimeters of rain), but rather how far the current weather deviates from the 7-year historical average. 
+    * **Valid Range:** **-3.0 to +3.0**
+        * **0.0 (Normal):** Exactly average historical conditions.
+        * **+1.0 to +3.0 (Surplus):** Above-average conditions (e.g., heavy rainfall, excellent soil moisture).
+        * **-1.0 to -3.0 (Deficit):** Below-average conditions (e.g., severe drought, dying crops).
+
+    ---
+    
+    **💡 Pro-Tip for Policymakers:** To test the resilience of the local market, try setting the Rainfall slider to "Normal" (0.0 anomaly) but increase the Exchange Rate slider to simulate high inflation. The model will demonstrate the "macroeconomic blind spot"—showing how prices will still spike despite perfect weather conditions.
+    """)
 
 # --- 1. LOAD DATA ---
 @st.cache_data(ttl=3600)
@@ -94,13 +141,47 @@ if enable_sim:
     base_row, _, _, _, _ = get_predictions()
     
     if base_row is not None:
-        manual_overrides[selected_crop] = st.sidebar.number_input(f"Current {selected_crop_name} Price (₦)", value=float(base_row[selected_crop]), step=500.0)
+        # Enforce positive values for grain prices
+        manual_overrides[selected_crop] = st.sidebar.number_input(
+            f"Current {selected_crop_name} Price (₦)", 
+            value=float(base_row[selected_crop]), 
+            min_value=0.0, 
+            step=500.0
+        )
+        
+        # Enforce realistic exchange rate bounds (e.g., 500 to 3500) to prevent the Extrapolation Trap
         if 'Exchange_Rate' in base_row:
-            manual_overrides['Exchange_Rate'] = st.sidebar.number_input("Exchange Rate (NGN/USD)", value=float(base_row['Exchange_Rate']), step=50.0)
-        manual_overrides['NDVI_Anomaly'] = st.sidebar.number_input("NDVI Anomaly", value=float(base_row['NDVI_Anomaly']), step=0.1)
-        manual_overrides['NDMI_Anomaly'] = st.sidebar.number_input("NDMI Anomaly", value=float(base_row['NDMI_Anomaly']), step=0.1)
-        manual_overrides['Rainfall_Anomaly'] = st.sidebar.number_input("Rainfall Anomaly", value=float(base_row['Rainfall_Anomaly']), step=0.1)
-
+            manual_overrides['Exchange_Rate'] = st.sidebar.number_input(
+                "Exchange Rate (NGN/USD)", 
+                value=float(base_row['Exchange_Rate']), 
+                min_value=500.0, 
+                max_value=3500.0, 
+                step=50.0
+            )
+            
+        # Enforce Z-Score physics limits (-4.0 to +4.0) for climate variables
+        manual_overrides['NDVI_Anomaly'] = st.sidebar.number_input(
+            "NDVI Anomaly", 
+            value=float(base_row['NDVI_Anomaly']), 
+            min_value=-4.0, 
+            max_value=4.0, 
+            step=0.1
+        )
+        manual_overrides['NDMI_Anomaly'] = st.sidebar.number_input(
+            "NDMI Anomaly", 
+            value=float(base_row['NDMI_Anomaly']), 
+            min_value=-4.0, 
+            max_value=4.0, 
+            step=0.1
+        )
+        manual_overrides['Rainfall_Anomaly'] = st.sidebar.number_input(
+            "Rainfall Anomaly", 
+            value=float(base_row['Rainfall_Anomaly']), 
+            min_value=-4.0, 
+            max_value=4.0, 
+            step=0.1
+        )
+        
 # --- 3. MAIN DASHBOARD ---
 last_row, last_date, next_date, stress_val, price_preds = get_predictions(manual_overrides)
 history_df = load_historical_data()
