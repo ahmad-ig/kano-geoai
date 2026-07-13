@@ -1,0 +1,6 @@
+jupyter
+ipykernel
+notebook
+ipywidgets
+black
+pytest

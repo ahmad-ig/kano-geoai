@@ -13,6 +13,21 @@ venv/
 .venv/
 geoai/
 
+# React dependencies
+frontend/node_modules/
+
+# Build output
+frontend/dist/
+
+# Logs
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+# Environment files
+frontend/.env
+frontend/.env.local
+
 # ML Artifacts (Git ignore the top-level data folder, but you can add specific subfolders if needed)
 /data/
 
@@ -29,6 +44,9 @@ geoai/
 # Jupyter
 notebooks/
 .ipynb_checkpoints/
+
+# Docs
+docs/
 
 # Streamlit cache
 .streamlit/
