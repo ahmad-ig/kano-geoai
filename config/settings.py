@@ -25,6 +25,6 @@ XGB_PARAMS = {
 
 # VALIDATION STRATEGY
 # Set to last 12 months for experimentation, 0 for production deployment
-TEST_MONTHS_CUTOFF = 0 
+TEST_MONTHS_CUTOFF = 12
 
 DATA_SOURCE = "csv" # "db" or "csv"
