@@ -36,8 +36,8 @@ def run_pipeline():
     pipeline_steps = [
         #("1. Data Ingestion: Market Prices (FEWS NET)", ["python", "-m", "src.data.fetch_prices"]),
         #("2. Data Ingestion: Satellite Data (GEE)", ["python", "-m", "src.data.fetch_satellite"]),
-        ("3. Data Engineering: ETL Pipeline", ["python", "-m", "src.data.etl_pipeline"]),
-        ("4. Features: Build Features", ["python", "-m", "src.features.build_features"]),
+        #("3. Data Engineering: ETL Pipeline", ["python", "-m", "src.data.etl_pipeline"]),
+        #("4. Features: Build Features", ["python", "-m", "src.features.build_features"]),
         ("5. Machine Learning: Train Price Models", ["python", "-m", "src.models.train_price_models"]),
         ("6. Machine Learning: Train Stress Model", ["python", "-m", "src.models.train_stress_model"]),
         

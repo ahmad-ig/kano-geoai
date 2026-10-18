@@ -42,5 +42,17 @@ def train_price_models(df):
 
 if __name__ == "__main__":
     engine = get_engine()
-    df = load_and_prep_data(engine)
-    train_price_models(df)
+
+    # 1. Load the full dataset
+    full_df = load_and_prep_data(engine)
+
+    # 2. Apply Train/Test split logic (if TEST_MONTHS_CUTOFF > 0, we only train on the training set)
+    if settings.TEST_MONTHS_CUTOFF > 0:
+        train_df = full_df.iloc[:-settings.TEST_MONTHS_CUTOFF].copy()
+        print(f"📉 Training Mode: Using first {len(train_df)} months (Holding back last {settings.TEST_MONTHS_CUTOFF}).")
+    else:
+        train_df = full_df.copy()
+        print(f"🚀 Production Mode: Training on FULL dataset ({len(train_df)} months).")
+    
+    # 3. Train models only on the training subset
+    train_price_models(train_df)

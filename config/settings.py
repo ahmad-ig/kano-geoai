@@ -25,4 +25,4 @@ XGB_PARAMS = {
 
 # VALIDATION STRATEGY
 # Set to last 12 months for experimentation, 0 for production deployment
-TEST_MONTHS_CUTOFF = 12
+TEST_MONTHS_CUTOFF = 0

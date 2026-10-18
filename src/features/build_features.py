@@ -44,16 +44,19 @@ def load_and_prep_data(engine):
     # Drop NaNs created by lags (differencing)
     df_clean = df.dropna().copy()
 
-    # 5. Train/Test Split Logic
-    if settings.TEST_MONTHS_CUTOFF > 0:
-        train_df = df_clean.iloc[:-settings.TEST_MONTHS_CUTOFF]
-        print(f"📉 Training Mode: Using first {len(train_df)} months (Holding back last {settings.TEST_MONTHS_CUTOFF}).")
-    else:
-        train_df = df_clean
-        print(f"🚀 Production Mode: Training on FULL dataset ({len(train_df)} months).")
+    # # 5. Train/Test Split Logic
+    # if settings.TEST_MONTHS_CUTOFF > 0:
+    #     train_df = df_clean.iloc[:-settings.TEST_MONTHS_CUTOFF]
+    #     print(f"📉 Training Mode: Using first {len(train_df)} months (Holding back last {settings.TEST_MONTHS_CUTOFF}).")
+    # else:
+    #     train_df = df_clean
+    #     print(f"🚀 Production Mode: Training on FULL dataset ({len(train_df)} months).")
     
-    print(f"✅ Data preparation complete. Training shape: {train_df.shape}")
-    return train_df
+    # print(f"✅ Data preparation complete. Training shape: {train_df.shape}")
+    # return train_df
+
+    print(f"✅ Data preparation complete. Full dataset shape: {df_clean.shape}")
+    return df_clean
 
 
 if __name__ == "__main__":

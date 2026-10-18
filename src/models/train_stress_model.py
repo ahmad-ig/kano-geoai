@@ -37,5 +37,17 @@ def train_stress_model(df):
 if __name__ == "__main__":
     # Test run (requires data_loader to work first)
     engine = get_engine()
-    df = load_and_prep_data(engine)
-    train_stress_model(df)
+    
+    # 1. Load the FULL dataset
+    full_df = load_and_prep_data(engine)
+    
+    # 2. Apply Train/Test Split Logic
+    if settings.TEST_MONTHS_CUTOFF > 0:
+        train_df = full_df.iloc[:-settings.TEST_MONTHS_CUTOFF].copy()
+        print(f"📉 Training Mode: Using first {len(train_df)} months (Holding back last {settings.TEST_MONTHS_CUTOFF}).")
+    else:
+        train_df = full_df.copy()
+        print(f"🚀 Production Mode: Training on FULL dataset ({len(train_df)} months).")
+        
+    # 3. Train model ONLY on the training subset
+    train_stress_model(train_df)

@@ -22,9 +22,9 @@ def evaluate(engine):
     test_months = settings.TEST_MONTHS_CUTOFF or 12
     test_months = min(test_months, len(df))
 
-    # if test_months == 0:
-    #     print("⚠️  Production Mode detected (Cutoff=0). Using last 12 months for sanity check.")
-    #     test_months = 12
+    if test_months == 0:
+        print("⚠️  Production Mode detected (Cutoff=0). Using last 12 months for sanity check.")
+        test_months = 12
 
     test_df = df.iloc[-test_months:].copy()
 
