@@ -23,6 +23,9 @@ XGB_PARAMS = {
     'n_jobs': -1
 }
 
+# MLFLOW CONFIG
+MLFLOW_TRACKING_URI = 'http://localhost:5000'
+
 # VALIDATION STRATEGY
 # Set to last 12 months for experimentation, 0 for production deployment
 TEST_MONTHS_CUTOFF = 0

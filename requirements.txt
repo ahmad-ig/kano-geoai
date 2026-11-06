@@ -289,3 +289,4 @@ xyzservices==2025.11.0
 yarl==1.22.0
 zc.lockfile==4.0
 zipp==3.23.0
+pyarrow=21.0.0

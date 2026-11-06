@@ -1,10 +1,9 @@
 import pandas as pd
-from datetime import datetime
-from calendar import monthrange
 import ee
 
 from config import settings
-from config.database import get_engine
+from config.database import get_engine, get_latest_satellite_month, save_satellite_data
+
 
 def fetch_satellite_data(engine):
     print("🌍 Initializing Google Earth Engine...")
@@ -23,10 +22,21 @@ def fetch_satellite_data(engine):
     gaul = ee.FeatureCollection("projects/geoai-final-year-project/assets/gadm41_NGA_2")
     kano_lgas = gaul.filter(ee.Filter.eq('NAME_1', 'Kano'))
 
-    # Time Range (From 2017 to Current Month)
-    start_date = '2017-01-01'
-    end_date = datetime.now().strftime('%Y-%m-%d')
-    print(f"⏳ Time Range: {start_date} to {end_date}")
+    # Fetch only completed months.
+    start_date = get_latest_satellite_month(engine)
+
+    current_month_start = pd.Timestamp.now().to_period("M").to_timestamp()
+    last_complete_month = current_month_start - pd.DateOffset(months=1)
+
+    if start_date > last_complete_month:
+        print("✅ Satellite data is already up to date.")
+        return
+
+    end_date = current_month_start.strftime("%Y-%m-%d")
+    start_date_str = start_date.strftime("%Y-%m-%d")
+
+    print(f"⏳ Time Range: {start_date_str} to {end_date} (exclusive)")
+
 
     # --- 2. THE STABLE CROP MASK OF ACTIVE AGRICULTURAL LANDS ---
     print("🌾 Calculating Stable Crop Mask (Dynamic World)...")
@@ -54,24 +64,32 @@ def fetch_satellite_data(engine):
 
     # --- 4. DATA COLLECTIONS ---
     print("Setting up Sentinel-2 & CHIRPS Collections...")
-    s2 = (ee.ImageCollection('COPERNICUS/S2_SR_HARMONIZED')
-          .filterDate(start_date, end_date)
-          .filterBounds(kano_lgas)
-          .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 30)) # Match GEE script
-          .map(mask_s2_clouds_and_filter)
-          .map(add_indices)
-          .select(['NDVI', 'NDMI']))
+    s2 = (
+        ee.ImageCollection('COPERNICUS/S2_SR_HARMONIZED')
+        .filterDate(start_date_str, end_date)
+        .filterBounds(kano_lgas)
+        .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 30)) # Match GEE script
+        .map(mask_s2_clouds_and_filter)
+        .map(add_indices)
+        .select(['NDVI', 'NDMI'])
+    )
 
-    chirps = (ee.ImageCollection("UCSB-CHG/CHIRPS/DAILY") # Using DAILY to match sum logic
-              .filterDate(start_date, end_date)
-              .select('precipitation'))
+    chirps = (
+        ee.ImageCollection("UCSB-CHG/CHIRPS/DAILY") # Using DAILY to match sum logic
+        .filterDate(start_date_str, end_date)
+        .select('precipitation')
+    )
 
     # --- 5. MONTHLY AGGREGATION & REDUCTION ---
     # Note: The GEE script used 10-day (Dekadal). We aggregate to MONTHLY here
     # to match the frequency of the Price Data (FEWS NET is monthly).
     
     all_data = []
-    dates = pd.date_range(start=start_date, end=end_date, freq='MS')
+    dates = pd.date_range(
+        start=start_date, 
+        end=last_complete_month, 
+        freq="MS"
+    )
     
     print(f"⚙️ Processing {len(dates)} months...")
     
@@ -80,9 +98,11 @@ def fetch_satellite_data(engine):
         m = date.month
         
         # Define month start and end
-        month_start = f"{y}-{m:02d}-01"
-        _, last_day = monthrange(y, m)
-        month_end = f"{y}-{m:02d}-{last_day}"
+        month_start = pd.Timestamp(year=y, month=m, day=1)
+        month_end = month_start + pd.DateOffset(months=1)
+
+        month_start = month_start.strftime("%Y-%m-%d")
+        month_end = month_end.strftime("%Y-%m-%d")
 
         # 1. Vegetation (Median to remove outliers, similar to GEE script)
         # Crucial: We apply the .updateMask(crop_mask) here!
@@ -138,25 +158,20 @@ def fetch_satellite_data(engine):
     # df = df.dropna(subset=['NDVI']) 
 
     # Keep all LGAa, even if NDVI is missing
+    
     df = df.copy()
     
-    # Save a CSV backup
-    df.to_csv(settings.RAW_ENV_PATH, index=False)
-    print(f"📁 Local backup saved to {settings.RAW_ENV_PATH.name}")
+    # # Save a CSV backup
+    # df.to_csv(
+    #     settings.RAW_ENV_DATA_PATH,
+    #     index=False
+    # )
+    # print(f"📁 Local backup saved to {settings.RAW_ENV_DATA_PATH.name}")
 
     # Save to PostgreSQL
     print(f"💾 Saving data to PostgreSQL database...")
-    try:
-        df.to_sql(
-            name='raw_env_data',
-            con=engine,
-            if_exists='replace',
-            index=False
-        )
-        print("✅Success! Live satellite data saved to PostgreSQL database.")
+    save_satellite_data(df, engine)
 
-    except  Exception as e:
-        print(f"❌ Database Error: {e}")
 
 if __name__ == "__main__":
     engine = get_engine()

@@ -170,7 +170,7 @@ export default function App() {
                       line: { color: '#1f77b4', width: 3 }
                     },
                     {
-                      x: [history_data?.dates?.[history_data.dates.length - 1], "2025-01-01"], 
+                      x: [history_data?.dates?.[history_data.dates.length - 1], "2026-07-01"], 
                       y: [history_data?.prices?.[history_data.prices.length - 1], price_preds.pred],
                       type: 'scatter',
                       mode: 'lines+markers',

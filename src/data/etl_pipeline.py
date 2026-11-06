@@ -2,8 +2,8 @@ import pandas as pd
 import numpy as np
 
 from config import settings
-from config.database import get_engine
-from src.db.queries import get_env_data, get_price_data, get_processed_features
+from config.database import get_engine, get_env_data, get_price_data, get_processed_features
+#from src.db.queries import get_env_data, get_price_data, get_processed_features
 
 def process_environmental_data(engine):
     """
@@ -160,28 +160,53 @@ if __name__ == "__main__":
         # 2. Process Prices (from DB)
         price_data = process_price_data(engine)
         
-        # 3. Merge & Feature Engineering
-        final_dataset = merge_and_engineer_features(env_data, price_data)
-        
-        # Drop the Period object before saving to DB
-        if 'Month_Year' in final_dataset.columns:
-            final_dataset = final_dataset.drop(columns=['Month_Year'])
+        # 3. Merge data & engineer features (lags, etc.)
+        final_dataset = merge_and_engineer_features(
+            env_data,
+            price_data
+        )
 
-        # 4. Save to Database
-        print("💾 Saving processed features to PostgreSQL...")
+        if final_dataset["Date"].duplicated().any():
+            raise ValueError(
+                "Duplicate dates detected in the final dataset."
+        )
+
+        # 6. Save processed features to PostgreSQL
+        # Convert Pandas Period objects to strings for PostgreSQL compatibility.
+        if "Month_Year" in final_dataset.columns:
+            final_dataset["Month_Year"] = (
+                final_dataset["Month_Year"].astype(str)
+        )
+
         final_dataset.to_sql(
             name='processed_features',
             con=engine,
             if_exists='replace',
             index = False
         )
-        print("✅ Successfully saved to database table: 'processed_features'")
+        print("Successfully saved to database table: 'processed_features'")
 
-        # 5. CSV backup
-        final_dataset.to_csv(settings.PROCESSED_DATA_PATH, index=False)
-        print(f"\n✅ ETL Complete! Backup saved to: {settings.PROCESSED_DATA_PATH}")
+        # # 5. CSV backup
+        # final_dataset.to_csv(
+        #     settings.PROCESSED_DATA_PATH, 
+        #     index=False
+        # )
+        # print(f"CSV backup saved to {settings.PROCESSED_DATA_PATH}")
+
+        # 6. Parquet backup
+        final_dataset.to_parquet(
+            settings.SNAPSHOT_PROCESSED_DATA_PATH,
+            index=False,
+            engine="pyarrow"
+        )
+        print(f"Parquet backup saved to {settings.SNAPSHOT_PROCESSED_DATA_PATH}")
+
+        # 7.  Report dataset information
+        print("\nFinal Dataset Information:")
+        
+        print(f"Features: {list(final_dataset.columns)}")
         print(f"   Final Shape: {final_dataset.shape}")
 
     except Exception as e:
-        print(f"\n❌ ETL Pipeline Failed: {e}")
-        
+        print(f"\nETL Pipeline Failed: {e}")
+        raise

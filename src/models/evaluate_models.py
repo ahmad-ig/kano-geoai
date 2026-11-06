@@ -4,9 +4,9 @@ import joblib
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score, mean_absolute_percentage_error
 
 from config import settings
-from config.database import get_engine
-from src.features.build_features import load_and_prep_data
-from src.models.features import (
+from src.data.load_training_data import load_training_data
+from src.features.build_features import build_features
+from src.features.select_features import (
     get_season_cols,
     get_price_features,
     get_stress_features
@@ -15,7 +15,7 @@ from src.models.features import (
 
 def evaluate(engine):
     """Evaluates the performance of the trained models on the most recent data."""
-    df = load_and_prep_data(engine)
+    df = build_features(load_training_data())
     
     # Define Test Set (Last 12 Months)
     # Logic: If we are in Production mode (Cutoff=0), we fallback to 12 months for the report
@@ -23,13 +23,13 @@ def evaluate(engine):
     test_months = min(test_months, len(df))
 
     if test_months == 0:
-        print("⚠️  Production Mode detected (Cutoff=0). Using last 12 months for sanity check.")
+        print(" Production Mode detected (Cutoff=0). Using last 12 months for sanity check.")
         test_months = 12
 
     test_df = df.iloc[-test_months:].copy()
 
     if test_df.empty:
-        raise ValueError("❌ Test dataset is empty.")
+        raise ValueError("Test dataset is empty.")
     
     season_cols = get_season_cols(df.columns)
 
@@ -46,7 +46,7 @@ def evaluate(engine):
         model_path = settings.MODELS_DIR / f"model_{crop}.pkl"
         
         if not model_path.exists():
-            print(f"⚠️ {crop}: Model not found at {model_path}")
+            print(f"{crop}: Model not found at {model_path}")
             continue
 
         # Load Model
@@ -74,11 +74,11 @@ def evaluate(engine):
     
     print("-" * 85)
     if avg_mae:
-        print(f"🏆 Average Error across all crops: ₦{np.mean(avg_mae):,.0f} | Average MAPE: {np.mean(avg_mape):.2f}%")
+        print(f"Average Error across all crops: ₦{np.mean(avg_mae):,.0f} | Average MAPE: {np.mean(avg_mape):.2f}%")
     
     # --- 2. EVALUATE VEGETATION STRESS MODEL ---
 
-    print(f"\n🌱 ENVIRONMENTAL EVALUATION REPORT (Last {test_months} months)")
+    print(f"\nENVIRONMENTAL EVALUATION REPORT (Last {test_months} months)")
     print("=" * 85)
     
     stress_model_path = settings.MODELS_DIR / "model_stress_ndvi.pkl"
@@ -100,7 +100,7 @@ def evaluate(engine):
         print(f"⚠️ Stress Model not found at {stress_model_path}")
         
     print("=" * 85)
-    print("\n✅ Full System Evaluation Complete.")
+    print("\nFull System Evaluation Complete.")
 if __name__ == "__main__":
-    engine = get_engine()
-    evaluate(engine)
+
+    evaluate(load_training_data())
